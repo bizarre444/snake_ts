@@ -26,6 +26,10 @@ function add(a: Point, b: Point): Point {
     return {x: a.x + b.x, y: a.y + b.y};
 }
 
+function isEqual(a: Point, b: Point): boolean {
+    return a.x === b.x && a.y === b.y;
+}
+
 class Vector {
     static up = { x: 0, y: -1};
     static down = { x: 0, y: 1};
@@ -91,8 +95,12 @@ if (ctx) {
 }
 
 class Game {
+    nextHeadLocation(state: GameState): Point {
+        return add(state.headLocation, this.getCurrentDirection(state));
+    }
+
     checkObstacle(state: GameState): boolean {
-        const {x, y} = add(state.headLocation, state.bodyVectors[0]);
+        const {x, y} = this.nextHeadLocation(state);
         return (x < 0 || y < 0 || x >= state.fieldSize.width || y >= state.fieldSize.height);
     }
 
@@ -102,6 +110,41 @@ class Game {
             result.gameOver = true;
             return result;
         }
+        this.moveSnake(result);
+        if (this.eat(result)) {
+            this.addFood(result);
+        } else this.shrink(result);
         return result;
+    }
+
+    eat(state: GameState): boolean {
+        const isEqualHeadLocation = (foodLocation: Point): boolean => isEqual(state.headLocation, foodLocation);
+        let foodIndex = state.foodLocations.findIndex(isEqualHeadLocation);
+        if (foodIndex !== -1) {
+            state.foodLocations.splice(foodIndex, 1);
+            return true;
+        } else return false;
+    }
+
+    shrink(state: GameState): void {
+        if (state.bodyVectors.length > 1) {
+            state.bodyVectors.pop();
+        }
+    }
+
+    addFood(state: GameState): void {
+
+    }
+
+    moveSnake(state: GameState): void {
+        state.bodyVectors.unshift(this.getCurrentDirection(state));
+    }
+
+    getCurrentDirection(state: GameState): Point {
+        return state.bodyVectors[0];
+    }
+
+    setCurrentDirection(state: GameState, vector: Point) {
+        state.bodyVectors[0] = vector;
     }
 }
