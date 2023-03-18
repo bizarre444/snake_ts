@@ -3,15 +3,6 @@ console.log("Hello world!");
 enum CellType { Empty, SnakeBody, Food }
 enum Direction { Up, Down, Right, Left }
 
-function inverse(direct: Direction): Direction {
-    switch(direct) {
-        case Direction.Up: return Direction.Down;
-        case Direction.Down: return Direction.Up;
-        case Direction.Right: return Direction.Left;
-        case Direction.Left: return Direction.Right;
-    }
-}
-
 interface Size {
     height: number;
     width: number;
@@ -28,6 +19,10 @@ function add(a: Point, b: Point): Point {
 
 function isEqual(a: Point, b: Point): boolean {
     return a.x === b.x && a.y === b.y;
+}
+
+function inverse(a: Point): Point {
+    return { x: -a.x, y: -a.y };
 }
 
 class Vector {
@@ -67,15 +62,17 @@ class Render {
 class GameState {
     readonly fieldSize: Size;
     headLocation: Point;
+    headDirection: Point;
     foodLocations: Point[];
-    bodyVectors: Point[];
+    tailVectors: Point[];
     gameOver: boolean;
 
     constructor(fieldSize: Size) {
         this.fieldSize = fieldSize;
         this.headLocation = { x: this.fieldSize.height / 2, y: this.fieldSize.width / 2};
         this.foodLocations = [];
-        this.bodyVectors = [Vector.up];
+        this.tailVectors = [];
+        this.headDirection = Vector.up;
         this.gameOver = false;
     }
 
@@ -100,8 +97,20 @@ class Game {
     }
 
     checkObstacle(state: GameState): boolean {
-        const {x, y} = this.nextHeadLocation(state);
-        return (x < 0 || y < 0 || x >= state.fieldSize.width || y >= state.fieldSize.height);
+        const h = this.nextHeadLocation(state);
+        if (h.x < 0 || h.y < 0 || h.x >= state.fieldSize.width || h.y >= state.fieldSize.height) {
+            return true;
+        } 
+        const snakeLocations = this.getSnakeLocations(state);
+        return snakeLocations.some((elem) => isEqual(elem, h));
+    }
+
+    getSnakeLocations(state: GameState): Point[] {
+        let result = [state.headLocation];
+        for ( let tailVector of state.tailVectors ) {
+            result.push(add(result[result.length - 1], tailVector));
+        }
+        return result;
     }
 
     nextState(previous: GameState): GameState {
@@ -127,24 +136,50 @@ class Game {
     }
 
     shrink(state: GameState): void {
-        if (state.bodyVectors.length > 1) {
-            state.bodyVectors.pop();
+        if (state.tailVectors.length > 0) {
+            state.tailVectors.pop();
         }
     }
 
     addFood(state: GameState): void {
+        const freeCells = this.getFreeCells(state);
+        const index = Math.floor(Math.random() * freeCells.length);
+        const freeCellLocation = freeCells[index];
+        state.foodLocations.push(freeCellLocation);
+    }
 
+    getFreeCells(state: GameState): Point[] {
+        const freeCellsFlags: boolean[] = new Array(state.fieldSize.height * state.fieldSize.width);
+        freeCellsFlags.fill(true);
+        const pointToIndex = (point: Point): number => {
+            return point.x + point.y * state.fieldSize.width;
+        }
+        const markOccupied = (point: Point): void => { 
+            freeCellsFlags[pointToIndex(point)] = false;
+        }
+        this.getSnakeLocations(state).forEach(markOccupied);
+        state.foodLocations.forEach(markOccupied);
+        const result: Point[] = [];
+        for( let x = 0; x < state.fieldSize.width; ++x ) {
+            for( let y = 0; y < state.fieldSize.height; ++y ) {
+                const point = { x: x, y: y };
+                if(freeCellsFlags[pointToIndex(point)]) {
+                    result.push(point);
+                }
+            } 
+        }
+        return result;
     }
 
     moveSnake(state: GameState): void {
-        state.bodyVectors.unshift(this.getCurrentDirection(state));
+        state.tailVectors.unshift(inverse(this.getCurrentDirection(state)));
     }
 
     getCurrentDirection(state: GameState): Point {
-        return state.bodyVectors[0];
+        return state.headDirection;
     }
 
     setCurrentDirection(state: GameState, vector: Point) {
-        state.bodyVectors[0] = vector;
+        state.headDirection = vector;
     }
 }
