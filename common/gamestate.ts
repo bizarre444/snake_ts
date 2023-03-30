@@ -1,6 +1,6 @@
-import { Point } from "./point";
-import { Vector } from "./vector";
-import { Size } from "./size";
+import { Point } from "./point.js";
+import { Vector } from "./vector.js";
+import { Size } from "./size.js";
 
 export class GameState {
     readonly fieldSize: Size;

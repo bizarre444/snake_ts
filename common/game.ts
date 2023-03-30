@@ -1,5 +1,5 @@
-import { GameState } from "./gamestate";
-import { Point, add, isEqual, inverse } from "./point";
+import { GameState } from "./gamestate.js";
+import { Point, add, isEqual, inverse } from "./point.js";
 
 export class Game {
     nextHeadLocation(state: GameState): Point {
@@ -24,6 +24,9 @@ export class Game {
     }
 
     nextState(previous: GameState): GameState {
+        if (previous.gameOver) {
+            return previous;
+        }
         const result = previous.clone();
         if (this.checkObstacle(result)) {
             result.gameOver = true;
@@ -97,6 +100,8 @@ export class Game {
     }
 
     setCurrentDirection(state: GameState, vector: Point) {
-        state.headDirection = vector;
+        if (state.tailVectors.length == 0 || !isEqual(state.tailVectors[0], vector)) {
+            state.headDirection = vector;
+        }
     }
 }

@@ -11,10 +11,10 @@ class Game {
         if (h.x < 0 || h.y < 0 || h.x >= state.fieldSize.width || h.y >= state.fieldSize.height) {
             return true;
         }
-        const snakeLocations = this.getSnakeLocations(state);
+        const snakeLocations = Game.getSnakeLocations(state);
         return snakeLocations.some((elem) => (0, point_1.isEqual)(elem, h));
     }
-    getSnakeLocations(state) {
+    static getSnakeLocations(state) {
         let result = [state.headLocation];
         for (let tailVector of state.tailVectors) {
             result.push((0, point_1.add)(result[result.length - 1], tailVector));
@@ -71,7 +71,7 @@ class Game {
         const markOccupied = (point) => {
             freeCellsFlags[pointToIndex(point)] = false;
         };
-        this.getSnakeLocations(state).forEach(markOccupied);
+        Game.getSnakeLocations(state).forEach(markOccupied);
         state.foodLocations.forEach(markOccupied);
         const result = [];
         for (let x = 0; x < state.fieldSize.width; ++x) {
@@ -92,7 +92,9 @@ class Game {
         return state.headDirection;
     }
     setCurrentDirection(state, vector) {
-        state.headDirection = vector;
+        if (state.tailVectors.length == 0 || !(0, point_1.isEqual)(state.tailVectors[0], vector)) {
+            state.headDirection = vector;
+        }
     }
 }
 exports.Game = Game;

@@ -1,7 +1,7 @@
-import { Size } from "../common/size";
-import { Point } from "../common/point";
-import { GameState } from "../common/gamestate";
-import { Game }  from "../common/game";
+import { Size } from "../common/size.js";
+import { Point } from "../common/point.js";
+import { GameState } from "../common/gamestate.js";
+import { Game }  from "../common/game.js";
 
 export enum CellType { Empty, SnakeBody, Food }
 
