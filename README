@@ -1,2 +1,3 @@
 $ tsc -p server
+$ tsc -p browser
 $ npm test

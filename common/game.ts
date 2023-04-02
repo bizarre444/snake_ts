@@ -2,11 +2,31 @@ import { GameState } from "./gamestate.js";
 import { Point, add, isEqual, inverse } from "./point.js";
 
 export class Game {
-    nextHeadLocation(state: GameState): Point {
+    private initialState: GameState;
+    private currentState: GameState;
+
+    constructor(state: GameState) {
+        this.initialState = state;
+        this.currentState = state;
+    }
+
+    reset(): void {
+        this.currentState = this.initialState;
+    }
+
+    getCurrentState(): GameState {
+        return this.currentState;
+    }
+
+    advance(): void {
+        this.currentState = Game.nextState(this.currentState);
+    }
+
+    static nextHeadLocation(state: GameState): Point {
         return add(state.headLocation, this.getCurrentDirection(state));
     }
 
-    checkObstacle(state: GameState): boolean {
+    static checkObstacle(state: GameState): boolean {
         const h = this.nextHeadLocation(state);
         if (h.x < 0 || h.y < 0 || h.x >= state.fieldSize.width || h.y >= state.fieldSize.height) {
             return true;
@@ -23,7 +43,7 @@ export class Game {
         return result;
     }
 
-    nextState(previous: GameState): GameState {
+    static nextState(previous: GameState): GameState {
         if (previous.gameOver) {
             return previous;
         }
@@ -34,14 +54,14 @@ export class Game {
         }
         this.moveSnake(result);
         if (this.eat(result)) {
-            if(!this.addFood(result)) {
+            if(!Game.addFood(result)) {
                 result.gameOver = true;
             }
         } else this.shrink(result);
         return result;
     }
 
-    eat(state: GameState): boolean {
+    static eat(state: GameState): boolean {
         const isEqualHeadLocation = (foodLocation: Point): boolean => isEqual(state.headLocation, foodLocation);
         let foodIndex = state.foodLocations.findIndex(isEqualHeadLocation);
         if (foodIndex !== -1) {
@@ -50,13 +70,13 @@ export class Game {
         } else return false;
     }
 
-    shrink(state: GameState): void {
+    static shrink(state: GameState): void {
         if (state.tailVectors.length > 0) {
             state.tailVectors.pop();
         }
     }
 
-    addFood(state: GameState): boolean {
+    static addFood(state: GameState): boolean {
         const freeCells = this.getFreeCells(state);
         if (freeCells.length == 0) {
             return false;
@@ -67,7 +87,7 @@ export class Game {
         return true;
     }
 
-    getFreeCells(state: GameState): Point[] {
+    static getFreeCells(state: GameState): Point[] {
         const freeCellsFlags: boolean[] = new Array(state.fieldSize.height * state.fieldSize.width);
         freeCellsFlags.fill(true);
         const pointToIndex = (point: Point): number => {
@@ -90,18 +110,26 @@ export class Game {
         return result;
     }
 
-    moveSnake(state: GameState): void {
+    static moveSnake(state: GameState): void {
         state.headLocation = this.nextHeadLocation(state);
         state.tailVectors.unshift(inverse(this.getCurrentDirection(state)));
     }
 
-    getCurrentDirection(state: GameState): Point {
+    static getCurrentDirection(state: GameState): Point {
         return state.headDirection;
     }
 
-    setCurrentDirection(state: GameState, vector: Point) {
+    static setCurrentDirection(state: GameState, vector: Point): void {
         if (state.tailVectors.length == 0 || !isEqual(state.tailVectors[0], vector)) {
             state.headDirection = vector;
         }
+    }
+
+    setCurrentDirection(vector: Point): void {
+        Game.setCurrentDirection(this.currentState, vector);
+    }
+
+    over(): boolean {
+        return this.currentState.gameOver;
     }
 }

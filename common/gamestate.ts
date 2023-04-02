@@ -12,7 +12,7 @@ export class GameState {
 
     constructor(fieldSize: Size) {
         this.fieldSize = fieldSize;
-        this.headLocation = { x: this.fieldSize.height / 2, y: this.fieldSize.width / 2};
+        this.headLocation = { x: this.fieldSize.height / 2, y: this.fieldSize.width / 2 };
         this.foodLocations = [];
         this.tailVectors = [];
         this.headDirection = Vector.up;
@@ -20,6 +20,7 @@ export class GameState {
     }
 
     clone(): GameState {
-        return Object.assign(new GameState(this.fieldSize), this);
+        return Object.assign(new GameState(this.fieldSize), structuredClone(this));
+        //return structuredClone(this);
     }
 }
